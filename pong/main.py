@@ -1,46 +1,60 @@
 import turtle
+import time
 
-# Set up game screen
+# Set up the game screen
 wn = turtle.Screen()
 wn.title("Pong Game")
 wn.bgcolor("black")
 wn.setup(width=800, height=600)
 
-# Paddle 1
-paddle1 = turtle.Turtle()
-paddle1.speed(0)
-paddle1.shape("square")
-paddle1.color("red")
-paddle1.shapesize(stretch_wid=5, stretch_len=1)
-paddle1.penup()
-paddle1.goto(-350, 0)
-paddle1.dy = 20
+# Paddle settings
+paddle_speed = 20
+paddle_width = 5
+paddle_height = 1
 
-# Paddle 2
-paddle2 = turtle.Turtle()
-paddle2.speed(0)
-paddle2.shape("square")
-paddle2.color("blue")
-paddle2.shapesize(stretch_wid=5, stretch_len=1)
-paddle2.penup()
-paddle2.goto(350, 0)
-paddle2.dy = 20
+# Create Paddle class
+class Paddle(turtle.Turtle):
+    def __init__(self, color, x, y):
+        super().__init__()
+        self.speed(0)
+        self.shape("square")
+        self.color(color)
+        self.shapesize(stretch_wid=paddle_width, stretch_len=paddle_height)
+        self.penup()
+        self.goto(x, y)
 
-# Ball
+    def move_up(self):
+        y = self.ycor()
+        if y < 250:
+            y += paddle_speed
+        self.sety(y)
+
+    def move_down(self):
+        y = self.ycor()
+        if y > -240:
+            y -= paddle_speed
+        self.sety(y)
+
+# Create paddles
+paddle1 = Paddle("red", -350, 0)
+paddle2 = Paddle("blue", 350, 0)
+
+# Ball settings
+ball_speed = 2.0
 ball = turtle.Turtle()
 ball.speed(40)
 ball.shape("circle")
 ball.color("white")
 ball.penup()
 ball.goto(0, 0)
-ball.dx = 2.0
-ball.dy = -2.0
+ball.dx = ball_speed
+ball.dy = -ball_speed
 
 # Score
 score1 = 0
 score2 = 0
 
-# Score display
+# Score display settings
 score_display = turtle.Turtle()
 score_display.speed(0)
 score_display.color("white")
@@ -49,45 +63,17 @@ score_display.hideturtle()
 score_display.goto(0, 260)
 score_display.write("Player 1: 0  Player 2: 0", align="center", font=("Arial", 24, "normal"))
 
-# Function to move paddle1 up
-def paddle1_up():
-    y = paddle1.ycor()
-    if y < 250:
-        y += paddle1.dy
-    paddle1.sety(y)
-
-# Function to move paddle1 down
-def paddle1_down():
-    y = paddle1.ycor()
-    if y > -240:
-        y -= paddle1.dy
-    paddle1.sety(y)
-
-# Function to move paddle2 up
-def paddle2_up():
-    y = paddle2.ycor()
-    if y < 250:
-        y += paddle2.dy
-    paddle2.sety(y)
-
-# Function to move paddle2 down
-def paddle2_down():
-    y = paddle2.ycor()
-    if y > -240:
-        y -= paddle2.dy
-    paddle2.sety(y)
-
-# Keyboard bindings
-wn.listen()
-wn.onkeypress(paddle1_up, "w")
-wn.onkeypress(paddle1_down, "s")
-wn.onkeypress(paddle2_up, "Up")
-wn.onkeypress(paddle2_down, "Down")
-
 # Function to update the score display
 def update_score():
     score_display.clear()
     score_display.write("Player 1: {}  Player 2: {}".format(score1, score2), align="center", font=("Arial", 24, "normal"))
+
+# Keyboard bindings
+wn.listen()
+wn.onkeypress(paddle1.move_up, "w")
+wn.onkeypress(paddle1.move_down, "s")
+wn.onkeypress(paddle2.move_up, "Up")
+wn.onkeypress(paddle2.move_down, "Down")
 
 # Function to check paddle and ball collisions
 def check_collisions():
@@ -103,22 +89,20 @@ def check_collisions():
 
 # Function to automatically move the paddles when the ball is in their direction
 def auto_move_paddles():
-    # Move the left paddle when the ball is moving towards it
     if ball.dx < 0:
         if paddle1.ycor() < ball.ycor():
-            paddle1_up()
+            paddle1.move_up()
         elif paddle1.ycor() > ball.ycor():
-            paddle1_down()
+            paddle1.move_down()
 
-    # Move the right paddle when the ball is moving towards it
     if ball.dx > 0:
         if paddle2.ycor() < ball.ycor():
-            paddle2_up()
+            paddle2.move_up()
         elif paddle2.ycor() > ball.ycor():
-            paddle2_down()
+            paddle2.move_down()
 
 # Set the score limit for the game over
-score_limit = 5  # Change this to the desired score limit
+score_limit = 5
 
 # Function to check for game over
 def check_game_over():
@@ -136,11 +120,34 @@ def check_game_over():
         score_display.goto(0, 0)
         score_display.write(message, align="center", font=("Arial", 24, "normal"))
 
-# Main game loop
-while True:
-    wn.update()
+        # Wait for user input to play again
+        wn.onkeypress(restart_game, "y")
+        wn.onkeypress(quit_game, "n")
 
-    # Move the ball
+# Function to restart the game
+def restart_game():
+    global score1, score2
+    score1 = 0
+    score2 = 0
+    update_score()
+    ball.goto(0, 0)
+    ball.dx = ball_speed
+    ball.dy = -ball_speed
+    score_display.clear()
+    wn.onkeypress(paddle1.move_up, "w")
+    wn.onkeypress(paddle1.move_down, "s")
+    wn.onkeypress(paddle2.move_up, "Up")
+    wn.onkeypress(paddle2.move_down, "Down")
+    check_game_over()
+
+# Function to quit the game
+def quit_game():
+    wn.bye()
+
+# Main game loop
+def game_loop():
+    global score1, score2 
+    wn.update()
     ball.setx(ball.xcor() + ball.dx)
     ball.sety(ball.ycor() + ball.dy)
 
@@ -159,6 +166,7 @@ while True:
         score1 += 1
         update_score()
         check_collisions()
+        check_game_over()
 
     if ball.xcor() < -390:
         ball.goto(0, 0)
@@ -166,6 +174,16 @@ while True:
         score2 += 1
         update_score()
         check_collisions()
+        check_game_over()
 
     # Call the auto_move_paddles function
     auto_move_paddles()
+
+    # Set the game loop to run again
+    wn.ontimer(game_loop, 10)  # Delay in milliseconds
+
+# Start the game loop
+game_loop()
+
+# Start the game
+wn.mainloop()
