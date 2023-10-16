@@ -9,7 +9,7 @@ wn.setup(width=800, height=600)
 
 # Paddle settings
 paddle_speed = 20
-paddle_width = 5
+paddle_width = 3
 paddle_height = 1
 
 # Create Paddle class
@@ -38,6 +38,34 @@ class Paddle(turtle.Turtle):
 # Create paddles
 paddle1 = Paddle("red", -350, 0)
 paddle2 = Paddle("blue", 350, 0)
+
+# Create Obstacle class
+class Obstacle(turtle.Turtle):
+    def __init__(self, color, x, y):
+        super().__init__()
+        self.speed(0)
+        self.shape("square")
+        self.color(color)
+        self.shapesize(stretch_wid=3, stretch_len=0.5)  # Adjust the size
+        self.penup()
+        self.goto(x, y)
+
+# Create obstacles
+obstacle1 = Obstacle("gray", 0, 50)
+obstacle2 = Obstacle("gray", 0, -50)
+
+# Function to check ball and obstacle collisions
+def check_obstacle_collisions():
+    if (360 > ball.xcor() > 350) and (50 > ball.ycor() > -50):
+        ball.color("gray")
+        ball.setx(350)
+        ball.dx *= -1
+
+    if (-360 < ball.xcor() < -350) and (50 > ball.ycor() > -50):
+        ball.color("gray")
+        ball.setx(-350)
+        ball.dx *= -1
+
 
 # Ball settings
 ball_speed = 2.0
@@ -146,10 +174,13 @@ def quit_game():
 
 # Main game loop
 def game_loop():
-    global score1, score2 
+    global score1, score2
     wn.update()
     ball.setx(ball.xcor() + ball.dx)
     ball.sety(ball.ycor() + ball.dy)
+    
+    # Check for ball and obstacle collisions
+    check_obstacle_collisions()
 
     # Border checking
     if ball.ycor() > 290:
